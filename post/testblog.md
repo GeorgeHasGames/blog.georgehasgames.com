@@ -1,16 +1,9 @@
 ---
-title: Apple Launches Its First Foldable iPhone
+title: How To Learn Piano 
 date: 2026-03-24
-image: https://i.postimg.cc/nz2XGGkW/Wordpress-(1).png
-preview: This is a test post to make sure everything works!
-readTime: 3 min
+image: https://cdn.pixabay.com/photo/2026/01/01/18/32/piano-10046998_1280.jpg
+preview: Some wonderful insight into learning piano
+readTime: ???
 ---
 
-# Hello from Obsidian! 🎉
-
-This post was written in Obsidian and is now live on your custom domain.
-
-> [!tip]  
-> Obsidian callouts work perfectly here too!
-
-You can now add as many .md files as you want.
+Real gigichats dont need tutorials and Learn piano without help you loser
