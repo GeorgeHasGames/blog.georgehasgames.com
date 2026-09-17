@@ -68,7 +68,6 @@
             font-weight: 600;
             transition: 0.2s;
         }
-        .sync-btn { background: var(--accent); color: white; }
         .theme-btn { background: transparent; border: 1px solid var(--border); color: var(--text); }
 
         .container {
@@ -145,7 +144,6 @@
         <div id="current-date"></div>
         <h1 onclick="navigateToHome()">My Blog</h1>
         <div class="controls">
-            <button id="sync-btn" class="btn sync-btn" onclick="refreshFromGitHub()">🔄 Refresh</button>
             <button id="theme-toggle" class="btn theme-btn" onclick="toggleDark()"></button>
         </div>
     </div>
@@ -212,10 +210,6 @@ function imageMarkup(url, className = '') {
 }
 
 async function refreshFromGitHub() {
-    const btn = document.getElementById('sync-btn');
-    btn.innerText = "⏳ Loading...";
-    btn.disabled = true;
-
     try {
         const res = await fetch(`https://api.github.com/repos/${GITHUB_CONFIG.owner}/${GITHUB_CONFIG.repo}/contents/${GITHUB_CONFIG.postsFolder}?ref=${GITHUB_CONFIG.branch}&_=${Date.now()}`);
         if (!res.ok) throw new Error(`GitHub returned ${res.status}`);
@@ -249,9 +243,6 @@ async function refreshFromGitHub() {
             renderHome();
             routeCurrentPage();
         }
-    } finally {
-        btn.innerText = "🔄 Refresh";
-        btn.disabled = false;
     }
 }
 
