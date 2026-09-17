@@ -34,7 +34,6 @@
             transition: background 0.3s ease, color 0.3s ease;
         }
 
-        /* HEADER */
         .header {
             background: var(--box);
             border-bottom: 1px solid var(--border);
@@ -72,14 +71,12 @@
         .sync-btn { background: var(--accent); color: white; }
         .theme-btn { background: transparent; border: 1px solid var(--border); color: var(--text); }
 
-        /* MAIN LAYOUT - WIDER FOR ARTICLES */
         .container {
-            max-width: 1200px; /* Expanded from 1100px */
+            max-width: 1200px;
             margin: 40px auto;
             padding: 0 20px;
         }
 
-        /* HOME GRID */
         #home {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
@@ -99,10 +96,9 @@
         .card-body { padding: 20px; }
         .card-body h2 { font-family: 'Playfair Display', serif; margin: 0 0 10px; font-size: 1.3rem; }
 
-        /* EXPANDED ARTICLE VIEW */
         #article-view {
             display: none;
-            max-width: 1000px; /* EXPANDED to fill the "red boxes" space */
+            max-width: 1000px;
             margin: 40px auto;
             background: var(--box);
             padding: 40px;
@@ -110,7 +106,7 @@
             box-shadow: var(--card-shadow);
         }
         #article-content img {
-            width: 100%; /* Make images fill the new wider container */
+            width: 100%;
             max-height: 500px;
             object-fit: cover;
             border-radius: 8px;
@@ -128,7 +124,6 @@
             cursor: pointer;
         }
 
-        /* OBSIDIAN CALLOUTS */
         .callout {
             padding: 16px;
             margin: 20px 0;
@@ -171,21 +166,27 @@ const GITHUB_CONFIG = {
     postsFolder: "post"
 };
 
+// A local fallback keeps a broken/expired remote image from leaving an empty image area.
+const FALLBACK_IMAGE = 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(`
+    <svg xmlns="http://www.w3.org/2000/svg" width="1200" height="600" viewBox="0 0 1200 600">
+        <rect width="1200" height="600" fill="#202b3c"/>
+        <text x="600" y="315" text-anchor="middle" fill="#ffffff" font-family="serif" font-size="64">My Blog</text>
+    </svg>`);
+
 let articles = [];
 
-// Navigation logic for URLs
-window.onhashchange = handleRouting;
+// Refresh the posts whenever the URL changes, including moving home or opening an article.
+window.onhashchange = refreshFromGitHub;
 
-function handleRouting() {
-    const hash = window.location.hash.replace('#', '');
-    if (hash && articles.length > 0) {
-        const found = articles.find(a => slugify(a.id) === hash);
-        if (found) {
-            openArticle(found.id, false);
-            return;
-        }
-    }
-    goHomeUI();
+function currentHash() {
+    return decodeURIComponent(window.location.hash.slice(1));
+}
+
+function routeCurrentPage() {
+    const hash = currentHash();
+    const found = articles.find(a => slugify(a.id) === hash);
+    if (hash && found) openArticle(found.id);
+    else goHomeUI();
 }
 
 function slugify(text) {
@@ -203,39 +204,62 @@ function parseFrontmatter(md) {
     return { metadata: meta, content: match[2].trim() };
 }
 
+function imageMarkup(url, className = '') {
+    if (!url) return '';
+    // The error handler also covers URLs that are valid but no longer exist.
+    const safeUrl = String(url).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    return `<img class="${className}" src="${safeUrl}" alt="" onerror="this.onerror=null;this.src='${FALLBACK_IMAGE}'">`;
+}
+
 async function refreshFromGitHub() {
     const btn = document.getElementById('sync-btn');
     btn.innerText = "⏳ Loading...";
+    btn.disabled = true;
+
     try {
-        const res = await fetch(`https://api.github.com/repos/${GITHUB_CONFIG.owner}/${GITHUB_CONFIG.repo}/contents/${GITHUB_CONFIG.postsFolder}`);
+        const res = await fetch(`https://api.github.com/repos/${GITHUB_CONFIG.owner}/${GITHUB_CONFIG.repo}/contents/${GITHUB_CONFIG.postsFolder}?ref=${GITHUB_CONFIG.branch}&_=${Date.now()}`);
+        if (!res.ok) throw new Error(`GitHub returned ${res.status}`);
         const files = await res.json();
         const mdFiles = files.filter(f => f.name.endsWith('.md'));
 
         articles = await Promise.all(mdFiles.map(async file => {
-            const raw = await (await fetch(file.download_url)).text();
+            const rawResponse = await fetch(`${file.download_url}?_=${Date.now()}`);
+            if (!rawResponse.ok) throw new Error(`Could not load ${file.name}`);
+            const raw = await rawResponse.text();
             const { metadata, content } = parseFrontmatter(raw);
             return {
                 id: file.name,
                 title: metadata.title || file.name.replace('.md', ''),
                 date: metadata.date || 'Recent',
                 image: metadata.image || null,
-                content: content,
-                preview: content.slice(0, 120) + '...'
+                content,
+                preview: metadata.preview || content.slice(0, 120) + '...'
             };
         }));
-        
+
         localStorage.setItem('blog_cache', JSON.stringify(articles));
         renderHome();
-        handleRouting(); // Check URL after loading
-    } catch (e) { console.error(e); }
-    btn.innerText = "🔄 Refresh";
+        routeCurrentPage();
+    } catch (e) {
+        console.error('Unable to refresh blog posts:', e);
+        // Cached posts remain usable when GitHub is temporarily unavailable.
+        if (articles.length === 0) {
+            const saved = JSON.parse(localStorage.getItem('blog_cache') || '[]');
+            articles = Array.isArray(saved) ? saved : [];
+            renderHome();
+            routeCurrentPage();
+        }
+    } finally {
+        btn.innerText = "🔄 Refresh";
+        btn.disabled = false;
+    }
 }
 
 function renderHome() {
     const home = document.getElementById('home');
     home.innerHTML = articles.map(a => `
         <div class="article-card" onclick="navigateToArticle('${slugify(a.id)}')">
-            ${a.image ? `<img src="${a.image}">` : ''}
+            ${imageMarkup(a.image)}
             <div class="card-body">
                 <h2>${a.title}</h2>
                 <div class="meta">${a.date}</div>
@@ -245,26 +269,32 @@ function renderHome() {
     `).join('');
 }
 
-// URL triggers
-function navigateToArticle(slug) { window.location.hash = slug; }
-function navigateToHome() { window.location.hash = ''; }
+function navigateToArticle(slug) {
+    if (window.location.hash === `#${slug}`) refreshFromGitHub();
+    else window.location.hash = slug;
+}
 
-function openArticle(id, updateHash = true) {
+function navigateToHome() {
+    if (window.location.hash === '') refreshFromGitHub();
+    else window.location.hash = '';
+}
+
+function openArticle(id) {
     const a = articles.find(p => p.id === id);
     if (!a) return;
-    
+
     const view = document.getElementById('article-content');
     view.innerHTML = `
-        ${a.image ? `<img src="${a.image}">` : ''}
+        ${imageMarkup(a.image)}
         <h2>${a.title}</h2>
         <div class="meta">${a.date}</div>
         <hr style="opacity:0.1; margin: 20px 0;">
         <div class="md-body">${marked.parse(a.content)}</div>
     `;
-    
+
     document.getElementById('home').style.display = 'none';
     document.getElementById('article-view').style.display = 'block';
-    window.scrollTo(0,0);
+    window.scrollTo(0, 0);
 }
 
 function goHomeUI() {
@@ -280,15 +310,15 @@ function toggleDark() {
 }
 
 window.onload = () => {
-    const saved = JSON.parse(localStorage.getItem('blog_cache'));
-    if (saved) { 
-        articles = saved; 
-        renderHome(); 
-        handleRouting();
-    } else {
-        refreshFromGitHub();
+    // Always fetch on a full page refresh; cached data is only a fallback.
+    const saved = JSON.parse(localStorage.getItem('blog_cache') || '[]');
+    if (Array.isArray(saved) && saved.length) {
+        articles = saved;
+        renderHome();
+        routeCurrentPage();
     }
-    
+    refreshFromGitHub();
+
     if (localStorage.getItem('theme') === 'dark') toggleDark();
     else document.getElementById('theme-toggle').innerText = '🌙 Dark';
     document.getElementById('current-date').innerText = new Date().toLocaleDateString();
