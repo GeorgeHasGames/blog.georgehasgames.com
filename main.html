@@ -111,8 +111,22 @@
             border-radius: 8px;
             margin-bottom: 30px;
         }
-        #article-content h2 { font-family: 'Playfair Display', serif; font-size: 2.8rem; margin-bottom: 10px; }
+        #article-content .article-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 2.8rem;
+            line-height: 1.2;
+            margin: 0 0 10px;
+        }
         .md-body { font-size: 1.1rem; }
+        .md-body h1,
+        .md-body h2,
+        .md-body h3 {
+            font-family: 'Playfair Display', serif;
+            line-height: 1.3;
+        }
+        .md-body h1 { font-size: 2rem; }
+        .md-body h2 { font-size: 1.6rem; }
+        .md-body h3 { font-size: 1.3rem; }
 
         .back-link {
             display: inline-block;
@@ -133,7 +147,7 @@
 
         @media (max-width: 768px) {
             #article-view { padding: 20px; border-radius: 0; margin-top: 0; }
-            #article-content h2 { font-size: 2rem; }
+            #article-content .article-title { font-size: 2rem; }
         }
     </style>
 </head>
@@ -277,7 +291,7 @@ function openArticle(id) {
     const view = document.getElementById('article-content');
     view.innerHTML = `
         ${imageMarkup(a.image)}
-        <h2>${a.title}</h2>
+        <h1 class="article-title">${a.title}</h1>
         <div class="meta">${a.date}</div>
         <hr style="opacity:0.1; margin: 20px 0;">
         <div class="md-body">${marked.parse(a.content)}</div>
