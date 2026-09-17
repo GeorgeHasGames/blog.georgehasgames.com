@@ -2,7 +2,7 @@
 title: New map shows 140K Flock camera locations in the US
 date: 2026-03-24
 image: https://upload.wikimedia.org/wikipedia/commons/8/88/Flock_Safety_ALPR_Camera_%2853833285849%29.jpgutm_source=commons.wikimedia.org&utm_campaign=index&utm_content=original
-preview: Flock cameras are expanding: For better or for worse?
+preview: Flock cameras are expanding For better or for worse?
 readTime: 67
 ---
 
