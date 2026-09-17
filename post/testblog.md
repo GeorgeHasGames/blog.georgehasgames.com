@@ -15,7 +15,6 @@ Locations heavily affected by Flock cameras are far to the coast, such as New Yo
 As more people grow concerned about their safety, cities start cancelling Flock in their areas. As Flock depletes, they try to implement things that might have people want to keep it.
 Another claim from Flock states that images are only used for a week, unless extended. But the probability of the extensions is high; a single Flock camera takes nearly 1.3 million images, and repitions of said images aren't impossible
 Flaws in the Flock system are very notable, such as the timing and duration of images, amount, and overall saftey. But some factors are good.
----
 
 The Flock camera can track suspects across cities, and sometimes out of state. Since Flock is an international company, it travels through the US. 
 The farther a convict/suspect travles, the harder it gets to track them, but the sheer amount of cameras helps track.
